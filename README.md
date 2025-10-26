@@ -269,6 +269,24 @@ The `collection` field makes it easy to route different collections to different
 
 5. **Use PM2 or systemd** to keep the process running
 
+## Git Repository
+
+This project is ready for version control:
+
+```bash
+# Initialize git (already done)
+git init
+
+# Add remote repository
+git remote add origin https://github.com/your-username/mongodb-watcher.git
+
+# Create and push to main branch
+git checkout -b main
+git push -u origin main
+```
+
+**Security Reminder:** The `.env` file is automatically excluded from git via `.gitignore`. Only share `.env.example` publicly.
+
 ## License
 
 MIT
