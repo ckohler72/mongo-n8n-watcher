@@ -1,0 +1,22 @@
+[Unit]
+Description=MongoDB Change Stream Watcher for n8n
+After=network.target mongod.service
+Wants=mongod.service
+
+[Service]
+Type=simple
+User=chris
+WorkingDirectory=/home/chris/services/mongo-watcher
+ExecStart=/usr/bin/node /home/chris/services/mongo-watcher/mongodb-watcher.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mongodb-watcher
+Environment="NODE_ENV=production"
+
+# Environment variables are loaded from .env file in WorkingDirectory
+# No need to set them here - dotenv handles it automatically
+
+[Install]
+WantedBy=multi-user.target
