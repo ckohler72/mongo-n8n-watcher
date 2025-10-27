@@ -1,0 +1,25 @@
+[Unit]
+Description=Database Watcher Backend API
+After=network.target mongod.service
+Wants=mongod.service
+
+[Service]
+Type=simple
+User=chris
+WorkingDirectory=/home/chris/services/mongo-watcher/backend
+ExecStart=/usr/bin/node server.js
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=database-watcher-backend
+Environment="NODE_ENV=production"
+Environment="PORT=3330"
+
+# Load environment variables from .env file
+EnvironmentFile=-/home/chris/services/mongo-watcher/backend/.env
+
+[Install]
+WantedBy=multi-user.target
+

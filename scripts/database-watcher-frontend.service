@@ -1,0 +1,21 @@
+[Unit]
+Description=Database Watcher Frontend UI
+After=network.target database-watcher-backend.service
+Wants=database-watcher-backend.service
+
+[Service]
+Type=simple
+User=chris
+WorkingDirectory=/home/chris/services/mongo-watcher/frontend
+ExecStart=/usr/bin/npm run dev
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=database-watcher-frontend
+Environment="NODE_ENV=development"
+
+[Install]
+WantedBy=multi-user.target
+

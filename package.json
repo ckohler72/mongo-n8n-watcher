@@ -1,18 +1,20 @@
 {
-  "name": "mongodb-change-stream-watcher",
-  "version": "1.0.0",
-  "description": "MongoDB Change Stream watcher that sends changes to n8n webhook",
-  "main": "mongodb-watcher.js",
+  "name": "database-watcher-platform",
+  "version": "2.0.0",
+  "description": "Web-managed database watcher platform with React UI and Express API",
   "scripts": {
-    "start": "node mongodb-watcher.js",
-    "dev": "nodemon mongodb-watcher.js"
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "install-all": "npm run install-backend && npm run install-frontend",
+    "start-backend": "cd backend && npm start",
+    "start-frontend": "cd frontend && npm run dev",
+    "dev-backend": "cd backend && npm run dev",
+    "dev-frontend": "cd frontend && npm run dev",
+    "dev": "./dev-reload.sh",
+    "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\""
   },
   "dependencies": {
-    "mongodb": "^6.0.0",
-    "axios": "^1.6.0",
-    "dotenv": "^16.0.0"
+    "concurrently": "^8.2.2"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.0"
-  }
+  "devDependencies": {}
 }

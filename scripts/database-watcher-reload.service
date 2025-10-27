@@ -1,0 +1,16 @@
+[Unit]
+Description=Database Watcher Auto-Reload Watcher
+After=network.target
+PartOf=database-watcher-backend.service database-watcher-frontend.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/chris/services/mongo-watcher
+ExecStart=/home/chris/services/mongo-watcher/reload-watcher.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
