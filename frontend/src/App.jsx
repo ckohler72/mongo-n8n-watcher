@@ -260,7 +260,7 @@ function AddWatcherModal({ databases, editingWatcher, onClose, onSave }) {
                 webhookMethod: editingWatcher.webhookMethod || 'POST',
                 operations: editingWatcher.operations,
                 enabled: editingWatcher.enabled,
-                mongoDb: ''
+                mongoDb: editingWatcher.mongoDatabase || ''
             })
         }
     }, [editingWatcher])
@@ -339,12 +339,24 @@ function AddWatcherModal({ databases, editingWatcher, onClose, onSave }) {
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
+            // Prepare form data - include mongoDatabase if MongoDB
+            const selectedDb = databases.find(db => db._id === form.databaseId)
+            const formData = { ...form }
+            
+            // If MongoDB, include the selected database name
+            if (selectedDb && selectedDb.type === 'mongodb' && form.mongoDb) {
+                formData.mongoDatabase = form.mongoDb
+            }
+            
+            // Don't send mongoDb field to backend
+            delete formData.mongoDb
+            
             if (editingWatcher) {
                 // Update existing watcher
-                await axios.put(`${API_BASE}/watchers/${editingWatcher._id}`, form)
+                await axios.put(`${API_BASE}/watchers/${editingWatcher._id}`, formData)
             } else {
                 // Create new watcher
-                await axios.post(`${API_BASE}/watchers`, form)
+                await axios.post(`${API_BASE}/watchers`, formData)
             }
             onSave()
             onClose()

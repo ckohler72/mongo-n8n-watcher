@@ -42,7 +42,22 @@ router.get('/database/:databaseId', async (req, res) => {
 // Create watcher
 router.post('/', async (req, res) => {
   try {
+    console.log('Creating watcher with data:', JSON.stringify(req.body, null, 2));
+    
     const watcher = await Watcher.create(req.app.locals.db, req.body);
+    
+    // Populate database info for watcher service
+    if (watcher && watcher.databaseId) {
+      watcher.database = await Database.findById(req.app.locals.db, watcher.databaseId.toString());
+    }
+    
+    console.log('Created watcher:', JSON.stringify({
+      _id: watcher._id,
+      name: watcher.name,
+      mongoDatabase: watcher.mongoDatabase,
+      collection: watcher.collection,
+      databaseId: watcher.databaseId
+    }, null, 2));
     
     // Start the watcher if enabled
     if (watcher.enabled) {
@@ -51,6 +66,7 @@ router.post('/', async (req, res) => {
     
     res.status(201).json(watcher);
   } catch (error) {
+    console.error('Error creating watcher:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -88,8 +104,13 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Watcher not found' });
     }
     
-    // Get updated watcher
+    // Get updated watcher with database relation
     let watcher = await Watcher.findById(req.app.locals.db, req.params.id);
+    
+    // Populate database info for watcher service
+    if (watcher && watcher.databaseId) {
+      watcher.database = await Database.findById(req.app.locals.db, watcher.databaseId.toString());
+    }
     
     // Clean the watcher object before returning (remove any circular refs)
     const cleanWatcher = {
@@ -98,6 +119,7 @@ router.put('/:id', async (req, res) => {
       databaseId: watcher.databaseId,
       collection: watcher.collection,
       table: watcher.table,
+      mongoDatabase: watcher.mongoDatabase, // Include MongoDB database name
       webhookUrl: watcher.webhookUrl,
       webhookMethod: watcher.webhookMethod,
       operations: watcher.operations,

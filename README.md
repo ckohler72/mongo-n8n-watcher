@@ -23,6 +23,20 @@ A full-stack web application for monitoring database changes and forwarding them
 
 ## 🚀 Quick Start
 
+### Migration from Old Version
+
+If you're upgrading from the old single-file `mongodb-watcher.js`:
+
+```bash
+# Stop old service and migrate
+./scripts/migrate-from-old.sh
+```
+
+This will:
+- Stop the old service
+- Install new platform dependencies
+- Set up configuration files
+
 ### 1. Installation
 
 ```bash
@@ -178,6 +192,31 @@ Body: { "name": "New Name", ... }
 **Delete watcher:**
 ```bash
 DELETE /api/watchers/:id
+```
+
+### Status
+
+**Get system status:**
+```bash
+GET /api/status
+Response: {
+  "system": { "status": "operational", "uptime": 1234.56, "version": "2.0.0" },
+  "services": { "backend": "running", "mongodb": "connected" },
+  "watchers": { "total": 5, "active": 3, "running": 3, "totalTriggers": 150 },
+  "databases": { "total": 2, "enabled": 1 },
+  "activity": { "last24Hours": 45 },
+  "watcherDetails": [...]
+}
+```
+
+**Get watcher service status:**
+```bash
+GET /api/status/watchers
+Response: {
+  "activeWatchers": 3,
+  "databaseConnections": 2,
+  "watcherDetails": [...]
+}
 ```
 
 ### Logs & Stats

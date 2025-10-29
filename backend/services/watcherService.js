@@ -29,7 +29,10 @@ class WatcherService {
     // Load all enabled watchers
     const watchers = await Watcher.findAll(this.db);
     
+    console.log(`Found ${watchers.length} watcher(s) in database`);
+    
     for (const watcher of watchers) {
+      console.log(`Watcher "${watcher.name}": enabled=${watcher.enabled}, mongoDatabase="${watcher.mongoDatabase || '(not set)'}", hasDatabase=${!!watcher.database}`);
       if (watcher.enabled && watcher.database) {
         await this.startWatcher(watcher);
       }
@@ -83,7 +86,8 @@ class WatcherService {
       const client = new MongoClient(connectionString);
       await client.connect();
       console.log(`✓ Connected to MongoDB: ${database.name}`);
-      return { type, client, db: client.db() };
+      // Return client without specific db - will be set per watcher
+      return { type, client };
     }
     
     // TODO: Add PostgreSQL and MySQL connections
@@ -91,8 +95,69 @@ class WatcherService {
   }
   
   async watchMongoCollection(connection, watcher) {
-    const { db } = connection;
+    // Get the correct database for this watcher
+    let dbName = watcher.mongoDatabase;
+    
+    console.log(`[${watcher.name}] mongoDatabase field: "${dbName}"`);
+    
+    // Fallback: try to parse from connection string if not specified
+    if (!dbName || dbName.trim() === '') {
+      console.log(`[${watcher.name}] No mongoDatabase specified, trying to parse from connection string...`);
+      const database = watcher.database;
+      try {
+        const url = new URL(database.connectionString);
+        dbName = url.pathname.slice(1);
+        if (!dbName) {
+          dbName = url.searchParams.get('database');
+        }
+        if (dbName) {
+          console.log(`[${watcher.name}] Parsed database from connection string: "${dbName}"`);
+        }
+      } catch (e) {
+        // Manual parsing fallback
+        const match = database.connectionString.match(/mongodb:\/\/.+@[^\/]+\/([^?]+)/);
+        if (match && match[1]) {
+          dbName = match[1];
+          console.log(`[${watcher.name}] Parsed database from connection string (regex): "${dbName}"`);
+        }
+      }
+    }
+    
+    // Don't use admin database - it doesn't support change streams
+    if (!dbName || dbName === 'admin' || dbName === 'local' || dbName === 'config' || dbName.trim() === '') {
+      console.log(`[${watcher.name}] Database "${dbName}" is invalid, attempting to find available database...`);
+      // Try to find the database from available databases
+      const adminDb = connection.client.db().admin();
+      try {
+        const result = await adminDb.listDatabases();
+        const databases = result.databases
+          .filter(db => !['admin', 'local', 'config'].includes(db.name));
+        
+        if (databases.length > 0) {
+          // Use first non-system database
+          dbName = databases[0].name;
+          console.log(`⚠️  [${watcher.name}] Database not specified, using first available: ${dbName}`);
+          console.log(`⚠️  [${watcher.name}] WARNING: This may not be the correct database! Please edit watcher and select the correct MongoDB database.`);
+        } else {
+          throw new Error(`No valid database found. Please specify MongoDB database for watcher "${watcher.name}"`);
+        }
+      } catch (err) {
+        throw new Error(`Cannot determine MongoDB database for watcher "${watcher.name}". Please edit the watcher and select a database. Error: ${err.message}`);
+      }
+    }
+    
+    console.log(`[${watcher.name}] ✓ Using MongoDB database: "${dbName}"`);
+    console.log(`[${watcher.name}] ✓ Watching collection: "${watcher.collection}"`);
+    const db = connection.client.db(dbName);
     const collection = db.collection(watcher.collection);
+    
+    // Verify collection exists
+    const collections = await db.listCollections({ name: watcher.collection }).toArray();
+    if (collections.length === 0) {
+      console.warn(`⚠️  [${watcher.name}] Collection "${watcher.collection}" not found in database "${dbName}"`);
+    } else {
+      console.log(`✓ [${watcher.name}] Collection "${watcher.collection}" exists in database "${dbName}"`);
+    }
     
     // Create change stream pipeline
     const pipeline = [

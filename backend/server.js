@@ -7,6 +7,7 @@ const watcherRoutes = require('./routes/watchers');
 const databaseRoutes = require('./routes/databases');
 const webhookRoutes = require('./routes/webhooks');
 const logRoutes = require('./routes/logs');
+const statusRoutes = require('./routes/status');
 const WatcherService = require('./services/watcherService');
 
 const app = express();
@@ -49,8 +50,9 @@ app.use('/api/watchers', watcherRoutes);
 app.use('/api/databases', databaseRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/status', statusRoutes);
 
-// Health check
+// Health check (simple)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });

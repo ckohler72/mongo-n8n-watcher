@@ -7,6 +7,7 @@ class Watcher {
     this.databaseId = data.databaseId;
     this.collection = data.collection;
     this.table = data.table; // for SQL databases
+    this.mongoDatabase = data.mongoDatabase; // MongoDB database name (if MongoDB type)
     this.webhookUrl = data.webhookUrl;
     this.webhookMethod = data.webhookMethod || 'POST'; // HTTP method for webhook
     this.operations = data.operations || ['insert'];
@@ -23,6 +24,7 @@ class Watcher {
       databaseId: typeof data.databaseId === 'string' ? new ObjectId(data.databaseId) : data.databaseId,
       collection: data.collection,
       table: data.table,
+      mongoDatabase: data.mongoDatabase,
       webhookUrl: data.webhookUrl,
       webhookMethod: data.webhookMethod || 'POST',
       operations: data.operations || ['insert'],
